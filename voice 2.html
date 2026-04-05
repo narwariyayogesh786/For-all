@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>हिन्दी डिक्टेशन प्रो</title>
+
+    <style>
+
+        :root {
+
+            --primary: #4f46e5;
+
+            --bg: #0f172a;
+
+            --card: #1e293b;
+
+            --text: #f8fafc;
+
+        }
+
+        body {
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: var(--bg);
+
+            color: var(--text);
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            height: 100vh;
+
+            margin: 0;
+
+        }
+
+        .container {
+
+            background: var(--card);
+
+            padding: 2rem;
+
+            border-radius: 1rem;
+
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+
+            width: 90%;
+
+            max-width: 700px;
+
+            text-align: center;
+
+        }
+
+        h2 { margin-bottom: 1.5rem; color: #818cf8; }
+
+        textarea {
+
+            width: 100%;
+
+            height: 250px;
+
+            background: #0f172a;
+
+            color: #e2e8f0;
+
+            border: 1px solid #334155;
+
+            border-radius: 0.5rem;
+
+            padding: 1rem;
+
+            font-size: 1.1rem;
+
+            line-height: 1.6;
+
+            resize: none;
+
+            box-sizing: border-box;
+
+            margin-bottom: 1rem;
+
+        }
+
+        .controls {
+
+            display: flex;
+
+            gap: 10px;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+
+        }
+
+        button {
+
+            padding: 12px 24px;
+
+            border: none;
+
+            border-radius: 0.5rem;
+
+            cursor: pointer;
+
+            font-weight: bold;
+
+            transition: all 0.3s;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+        }
+
+        .btn-start { background: var(--primary); color: white; }
+
+        .btn-start.listening { background: #ef4444; animation: pulse 1.5s infinite; }
+
+        .btn-copy { background: #475569; color: white; }
+
+        .btn-download { background: #10b981; color: white; }
+
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        
+
+        @keyframes pulse {
+
+            0% { transform: scale(1); }
+
+            50% { transform: scale(1.05); }
+
+            100% { transform: scale(1); }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>🎙️ हिन्दी डिक्टेशन टूल</h2>
+
+    <textarea id="output" placeholder="बोलना शुरू करने के लिए बटन दबाएं..."></textarea>
+
+    
+
+    <div class="controls">
+
+        <button id="start-btn" class="btn-start">🎤 बोलना शुरू करें</button>
+
+        <button id="copy-btn" class="btn-copy">📋 कॉपी करें</button>
+
+        <button id="download-btn" class="btn-download">💾 सेव करें (.txt)</button>
+
+    </div>
+
+    <p id="status" style="margin-top: 15px; font-size: 0.9rem; color: #94a3b8;"></p>
+
+</div>
+
+<script>
+
+    const startBtn = document.getElementById('start-btn');
+
+    const output = document.getElementById('output');
+
+    const status = document.getElementById('status');
+
+    const copyBtn = document.getElementById('copy-btn');
+
+    const downloadBtn = document.getElementById('download-btn');
+
+    let recognition;
+
+    let isListening = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+        recognition.lang = 'hi-IN';
+
+        recognition.continuous = true; // लगातार सुनने के लिए
+
+                recognition.onresult = (event) => {
+
+            let currentTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+
+                if (event.results[i].isFinal) {
+
+                    output.value += event.results[i][0].transcript + ' ';
+
+                }
+
+            }
+
+        };
+
+        recognition.onerror = (event) => {
+
+            console.error("Speech Recognition Error: ", event.error);
+
+            status.innerText = "Error: " + event.error;
+
+            if(event.error === 'not-allowed') {
+
+                alert("कृपया ब्राउज़र के एड्रेस बार में जाकर माइक की परमिशन 'Allow' करें।");
+
+            }
+
+        };
+
+
+
+        recognition.onstart = () => {
+
+            isListening = true;
+
+            startBtn.innerHTML = "🛑 सुनना बंद करें";
+
+            startBtn.classList.add('listening');
+
+            status.innerText = "सिस्टम आपकी आवाज सुन रहा है...";
+
+        };
+
+        recognition.onend = () => {
+
+            isListening = false;
+
+            startBtn.innerHTML = "🎤 बोलना शुरू करें";
+
+            startBtn.classList.remove('listening');
+
+            status.innerText = "टाइपिंग रुक गई है।";
+
+        };
+
+        startBtn.onclick = () => {
+
+            if (isListening) {
+
+                recognition.stop();
+
+            } else {
+
+                recognition.start();
+
+            }
+
+        };
+
+    } else {
+
+        alert("माफ करें, आपका ब्राउज़र वॉइस टाइपिंग सपोर्ट नहीं करता। कृपया Chrome का उपयोग करें।");
+
+    }
+
+    // कॉपी बटन फंक्शन
+
+    copyBtn.onclick = () => {
+
+        output.select();
+
+        document.execCommand('copy');
+
+        status.innerText = "टेक्स्ट कॉपी हो गया!";
+
+        setTimeout(() => status.innerText = "", 2000);
+
+    };
+
+    // डाउनलोड बटन फंक्शन
+
+    downloadBtn.onclick = () => {
+
+        const text = output.value;
+
+        const blob = new Blob([text], { type: 'text/plain' });
+
+        const anchor = document.createElement('a');
+
+        anchor.download = 'my_typing.txt';
+
+        anchor.href = window.URL.createObjectURL(blob);
+
+        anchor.target = '_blank';
+
+        anchor.style.display = 'none';
+
+        document.body.appendChild(anchor);
+
+        anchor.click();
+
+        document.body.removeChild(anchor);
+
+    };
+
+</script>
+
+</body>
+
+</html>
+
